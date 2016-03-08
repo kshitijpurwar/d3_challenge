@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Pie charts</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <style type="text/css" media="screen">
+    .wrapper {
+        width: 33%;
+        /*text-align: center;*/
+        height: auto;
+        margin: 20px auto;
+        /*border: 1px solid black;*/
+    }
+    .legend{
+    	font-size: 18px;
+    	margin: 2px;
+    }
+    rect{
+    	stroke-width:2;
+    }
+    svg{
+    	margin: 10px;
+    }
+	body{
+		text-align: center;
+	}
+    </style>
+</head>
+
+<body>
+<h1>Pie chart updating ( Step 3.5 ;-) )</h1>
+<a href="./challenge.html">Click Here for the Data Table</a>
+<br>
+<a href="./pie chart.html">Click Here for Normal Pie Chart</a>
+    <div class="wrapper" title="Click Anywhere in wrapper to update">
+    <h1>Sepal Width For Various Species</h1>
+    </div>
+    <h3>Click on the SVG to update,Now using jquery ,Shortly coming is the d3 transition version</h3>
+    <h4>Coded by kshitij Purwar</h4>
+    <script>
+    var data;
+    var pie_data = [];
+    var width = 400;
+    var height = 400;
+    var radius = Math.min(width, height) / 2;
+    // var color = d3.scale.category10();
+    var color = d3.scale.ordinal().range(['#4385C9', '#648C85', '#B3F2C9', '#528C18', '#C3F25C']); 
+    var legendRectSize=22;
+    var legendSpacing=2;
+    //update part
+
+    $('.wrapper').on('click',update);
+    var count=0;
+    
+    
+    //extracting species
+
+    d3.tsv('data.tsv', function(d) { //loading the data in data variable
+        data = d; //fills data into data variable.
+        console.log(data);
+        // data here is an array of 149 objects.
+        // nests data into three objects acc. to species.
+        grouped_data = d3.nest().key(function(d) {
+            return d.species;
+        }).entries(data);
+        console.log(grouped_data);
+        /*now the data is an array of three objects classified acc. to species*/
+        //sorter fills the sepalwidth object according to the grouped data into specified sepalWidth ranges according to the species.
+        for (var i = 0; i < 3; i++)
+            grouped_data[i].values.forEach(sorter);
+        console.log(sepalWidth);
+
+        // for(var i=0;i<species.length;i++)
+        	// draw_pie(species[i]);
+        // draw_pie('virginica')
+        draw_pie(species[count]);
+
+        
+
+
+    });
+    // Sorting stuff so that i can easily make the pie chart
+        // var vc=sepalWidth['virginica'];
+        function data_for_pie(species) {
+            var species_data = sepalWidth[species];
+            var pied = [];
+            for (var i = 0; i < keys.length; i++) {
+                pied.push(species_data[keys[i]]);
+            }
+            return pied;
+            //pied for setosa is [1, 7, 26, 13, 3] where 1 sepalwidth(x) lies in x<=2.5.
+        }
+    // Svg drawing part
+        function draw_pie(sp){
+        pie_data = data_for_pie(sp);	
+                console.log(pie_data);
+
+       	var svg = d3.select('.wrapper').append('svg').attr({
+        'width': width,
+        'height': height
+    }).append('g').attr('transform', 'translate(' + (width / 2) + ',' + (height / 2) + ')').attr('fill', 'black');
+       	svg.append('text').text(sp+' ('+d3.sum(pie_data)+')').attr({ //adds the species name
+       		'font-family':'cursive',
+       		'font-size':'1em',
+        			x: -40,
+        			'y':90,
+        			'text-decoration': 'underline'
+       	});
+       	svg.append('text').text('Sepal Width').attr({ //add the 'Sepal Width' Word
+       		'font-family':'cursive',
+       		'font-size':'1em',
+        			x: -50,
+        			'y':-80,
+        			'text-decoration': 'underline'
+       	});
+    var arc = d3.svg.arc().outerRadius(radius).innerRadius(radius - 70);
+        var pie = d3.layout.pie().value(function(d) {
+            return d;
+        }).sort(null);
+		console.log("here species used is "+sp)
+		// d3.select('svg').append('h2').text('SepalWidth of '+sp );
+        var path = svg.selectAll('path').data(pie(pie_data)).enter().append('path').attr('d', arc).attr('fill',
+            function(d, i) {            	
+                console.log(keys[i]+'  :  '+d.data);
+                return color(keys[i]);
+            }).each(function(d){
+                this._current=d;
+
+            });
+        var legend=svg.selectAll('.legend').data(color.domain()).enter().append('g').attr('class','legend').attr('transform',function(d,i){
+        		var height= legendRectSize+legendSpacing;
+        		var offset= height*keys.length/2;
+        		var horz= -2*legendRectSize;
+        		var vert=i*height-offset;
+        		return 'translate('+horz+','+vert+')';
+        });
+        legend.append('rect').attr({'width':legendRectSize,
+        	'height':legendRectSize}).style({
+        		'fill':color,
+        		'stroke':color
+        	});
+        legend.append('text').attr({
+        			'font-family':'monospace',
+        			'x':3+legendRectSize+legendSpacing,
+        			'y':legendRectSize-legendSpacing,
+        			    'text-decoration': 'underline'
+        }).text(function(d,i){
+        	console.log(d,sp,d +'('+sepalWidth[sp][d]+')');
+        	return d +' ('+sepalWidth[sp][d]+')';
+        	
+        })	
+
+        };
+        // Draw pie ends here
+        function update(){
+        
+        $('svg').remove();
+        count++;
+        if(count==3)
+            count=0;
+        draw_pie(species[count]);
+        
+        
+    }
+        // d3.select('svg').on('click',function(){
+        //     update();
+        //     console.log('count is'+count)
+            
+        //     path.path(pie(data_for_pie(species[count])));
+        //     path.transition().duration(500).attrTween('d',function(){
+        //         var interploate=d3.interpolate(this._current,d);
+        //         this._current=interplote(0);
+        //         return function(t){
+        //             return arc(interpolate(t));
+        //         }
+        //     })
+        // });
+    var keys;
+    // datastructure to be used to store raw data for sepalwidth piechart.
+    var sepalWidth = {
+        'setosa': {
+            'x<=2.5': 0,
+            '2.5<x<=3': 0,
+            '3<x<=3.5': 0,
+            '3.5<x<=4': 0,
+            'x=>4': 0
+        },
+        'versicolor': {
+            'x<=2.5': 0,
+            '2.5<x<=3': 0,
+            '3<x<=3.5': 0,
+            '3.5<x<=4': 0,
+            'x=>4': 0
+        },
+        'virginica': {
+            'x<=2.5': 0,
+            '2.5<x<=3': 0,
+            '3<x<=3.5': 0,
+            '3.5<x<=4': 0,
+            'x=>4': 0
+        }
+    };
+    var species = Object.keys(sepalWidth);
+    keys = Object.keys(sepalWidth['setosa']);
+
+    //inputs a data row from data fetched (grouped data ) and then fills the sepalwidth acc. to specified ranges. 
+    function sorter(d) {
+        var x = d.sepalWidth;
+        if (x <= 2.5)
+            sepalWidth[d.species]['x<=2.5']++;
+        else if (2.5 < x && x <= 3)
+            sepalWidth[d.species]['2.5<x<=3']++;
+        else if (3 < x && x <= 3.5)
+            sepalWidth[d.species]['3<x<=3.5']++;
+        else if (3.5 < x && x <= 4)
+            sepalWidth[d.species]['3.5<x<=4']++;
+        else
+            sepalWidth[d.species]['x=>4']++;
+    }
+    // console.log(sepalWidth[1]);
+    // legend maker
+
+    </script>
+</body>
+
+</html>

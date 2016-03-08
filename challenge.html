@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Data table (step 1  and 2)</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <style media="screen">
+    body{
+        text-align: center;;
+    }
+    #info {
+        text-align: center;
+      width: 80%;
+      border-spacing: 0px;
+      border:1px solid black;
+        margin: 10px auto;      
+    }
+    td{
+        font-family: sans-serif;
+        padding: 5px;
+    }
+    th{
+        font-size: 1.5em;
+        font-family: monospace;
+    }/*
+    .odd{
+        color:white;
+        background: #B8BBCE;
+    }*/
+     tr:nth-child(odd) {
+   background-color: #D8E2EC;
+}
+    </style>
+</head>
+
+<body>
+    <h2> Data Collected (Step 1 and step 2)</h2>
+    <a href="./pie chart.html">Click here for Pie charts</a>
+    <table id="info">
+        <tr title="Click the headers to sort">
+            <!-- <th class="sort">Index</th> -->
+            <!-- Initially I class all the headers as descending  -->
+            <th  id="sepalLength" class="descending">Sepal Length  (cm) </th>
+            <th id="sepalWidth" class="descending">Sepal Width (cm) </th>
+            <th id="petalLength" class="descending">Petal Length (cm) </th>
+            <th id="petalWidth" class="descending">Petal Width (cm) </th>
+            <th id="species" class="descending">Species (cm) </th>
+        </tr>
+            
+        </table>
+    <h4>Coded by kshitij Purwar</h4>
+    <script>
+     var table = d3.select('#info')
+    // attr({
+    //     'id': 'viz',
+    //     'width': '100%',
+    //     'height': '100%'
+    // });
+    d3.tsv('data.tsv', function(data) {
+        console.log(data);
+        
+        var tr=table.selectAll('tr').data(data).enter().append('tr').attr('id',function(d,i){return i}).attr('class', 'row');
+            // tr.append('td').attr('class','index').text(function(d,i){return i});
+            //id attribute is not needed just added for the fun.
+            tr.append('td').attr('class','sepalLength').text(function(d){return d.sepalLength});
+            tr.append('td').attr('class','sepalWidth').text(function(d){return d.sepalWidth});
+            tr.append('td').attr('class','petalLength').text(function(d){return d.petalLength});
+            tr.append('td').attr('class','petalWidth').text(function(d){return d.petalWidth});
+            tr.append('td').attr('class','species').text(function(d){return d.species});
+        
+    });
+    function sort_it(e) {//sorting function which takes the sorting parameter as arguement
+        // alert('working');
+         var rows=d3.selectAll('.row');
+         // console.log(rows);
+         parameter=e.target.id;
+         var it=$('#'+parameter);
+         // console.log(e.target.id);
+         if(it.hasClass('ascending')){//descending sortor
+              it.addClass('descending').removeClass('ascending');//updates class accrodingly +desc & -ascd 
+              rows.sort(function(a,b){
+            return d3.descending(a[parameter],b[parameter]);
+         }) ;           
+         }
+         else{//ascending sorter
+             it.addClass('ascending').removeClass('descending');//updates class accrodingly -desc & +ascd
+             // console.log('a')
+             rows.sort(function(a,b){
+                console.log(d3.ascending(a[parameter],b[parameter]))
+            return d3.ascending(a[parameter],b[parameter]);
+         }) ;           
+         };       
+    };
+    function alphasort(){
+        var it=$('#species');
+        console.log('working');
+         var rows=d3.selectAll('.row');
+         if(it.hasClass('ascending')){//descending selector
+              it.addClass('descending').removeClass('ascending');
+               rows.sort(function(a,b){
+            return a.species.toLowerCase().localeCompare(b.species.toLowerCase());
+         });
+         }
+         else{//ascending sorter
+             it.addClass('ascending').removeClass('descending');
+             // console.log('a')
+              rows.sort(function(a,b){
+            return b.species.toLowerCase().localeCompare(a.species.toLowerCase());
+         });
+         } ;        
+
+        
+    };
+    // Adding event listeners to the all the headers
+    var sepL=$('#sepalLength').on('click',sort_it);
+    $('#petalLength').on('click',sort_it);
+    $('#sepalWidth').on('click',sort_it);
+    $('#petalWidth').on('click',sort_it);
+    $('#species').on('click',alphasort)
+    </script>
+</body>
+
+</html>
