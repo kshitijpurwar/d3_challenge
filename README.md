@@ -6,6 +6,6 @@ Some  helpful  Tutorials are lsited below :
 * d3 tutorial by [zero viscosity](http://zeroviscosity.com/category/d3-js-step-by-step)
 
 ###Upcoming Features 
-* Cleaner code
+* Cleaner code i.e. one without all the console.logs and all
 * Mature code with objects 
 * d3 *transitions* step 4
