@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Data table (step 1  and 2)</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <style media="screen">
+    body{
+        text-align: center;;
+    }
+    #chart{
+        border:1px solid blue;         
+        margin: auto;        
+    }
+    .bar {
+            /*fill: #00BCD4;*/
+    shape-rendering: crispEdges;
+
+    }
+    .foo{
+         /*fill: #9C27B0;*/
+    shape-rendering: crispEdges;
+
+       
+    }
+    .label{
+        font-family: monospace;
+        text-anchor:end;
+        font-size: 24px;
+        fill: black;
+    }
+    .axis path{
+        stroke:#000;
+        fill:none;
+        shape-rendering: crispEdges;
+    }
+    .axis text{
+
+        font-size: .7em;
+        font-family: sans-serif;
+    }
+    .gridLines path,.gridLines line{
+        fill:none;
+        shape-rendering: crispEdges;
+        stroke:#ccc;
+    }
+
+   
+    </style>
+</head>
+
+<body>
+
+<script >
+    // var d=[79, 76, 68, 18, 48, 24, 44, 79, 93, 29];
+    var width=800;
+    var height=500;
+     var d=[];
+     var margin={
+        top:25,
+        right:45,
+        left:35,
+        bottom:75
+     }
+     var w=width-margin.left-margin.right;
+     var h=height-margin.bottom-margin.top;
+
+    for(i=0;i<12;i++){
+        d.push(Math.floor(100*Math.random()));
+    }
+    var months=['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var sales=[];
+
+    for(i=0;i<12;i++){
+    sales.push({
+            month:months[i],
+            sale:d[i]
+        })
+    };
+    var x=d3.scale.ordinal().domain(months).rangeBands([0,w]);
+    var y=d3.scale.linear().domain([0,d3.max(sales,function(d){
+        return d.sale;
+    })]).range([h,0]); 
+     var color_scale=d3.scale.linear().domain([0,sales.length]).range(['#00BCD4','#3F48B5']);
+    console.log(sales);
+    var svg=d3.select('body').append('svg')
+        .attr({
+            id:'chart',
+            width:width,
+            height:height
+
+        } );
+        //adding Axes
+     var xAxis=d3.svg.axis()
+                .scale(x)
+                .orient('bottom');
+     var yAxis=d3.svg.axis()
+                .scale(y)
+                .orient('right');              
+     var yGridLines=d3.svg.axis()
+                .scale(y)
+                .tickSize(-w,0,0)
+                .tickFormat('')
+                .orient('right');    
+     var chart=svg.append('g')
+                .classed('display',true)
+                .attr('transform','translate('+margin.top+','+margin.top+')');
+        function randomColor(e){
+            return 'rgb('+Math.min(Math.floor(e*Math.random()),255)+','+Math.min(Math.floor(e*Math.random()),255)+','+Math.min(Math.floor(e*Math.random()),255)+')';
+        }
+        function plot(params){
+            // console.log(params,this)
+            this.append('g')
+            .call(params.GridLines)
+            .classed('gridLines',true)
+            .attr('transform','translate(' +w +',' + 0+ ')');
+
+            this.selectAll('.bar')
+            .data(params.data)
+            .enter()
+            .append('rect')
+            .classed('foo',function(e,i){return i%2==0})
+            .classed('bar',function(e,i){return !(i%2==0)})
+            .attr({
+                id:function(e,i){
+                    return i;
+                },
+                x:function(e,i){
+                    return x(e.month);
+                },
+                height:function (e,i) {
+                    return h-y(e.sale); 
+                },
+                width:function (e) {
+                    return x.rangeBand(); 
+                },
+                /*fill:function(e){
+                     return randomColor(e);
+                },
+                   */         
+                y:function (e) {
+                    return y(e.sale); 
+                },
+                fill:function (e,i) {
+                    return color_scale(i); 
+                }
+
+        
+
+            })  
+         this.selectAll(".label")
+         .data(params.data)
+         .enter()
+         .append('text')
+         .classed('label',true)
+         .text(function(e,i){return e.sale;})   
+         .attr({
+            
+            y: function (e) {
+               return y(e.sale)-5; 
+                },
+            x:function(e){
+                return x(e.month)+margin.left+5;
+            }
+         });
+         this.append('g')
+         .classed('x axis',true)
+         .attr('transform','translate(' + 0 + ','+ h + ')')
+         .call(params.axis.x)
+            .selectAll('text')
+            .attr({
+                'transform':'rotate(-45)',
+                dy:16,
+                dx:-20
+
+                });
+         
+
+         this.append('g')
+         .classed('y axis',true)
+         .attr('transform','translate(' + w + ','+ 0 + ')')
+         .call(params.axis.y);
+
+         this.select('.y')
+         .append('text')
+         .classed('Y-label',true)
+         .text('Sales in Million')
+         .attr(
+            'transform','rotate(90)'
+         ).attr({
+            dx:h/2 ,
+            dy:-33
+         });
+
+         this.select('.x')
+         .append('text')
+         .classed('X-label',true)
+         .text('Month of the Year')
+         .attr({
+            dx:w/2,
+            dy:65
+         });
+        }
+        plot.call(chart,{
+                    data:sales,
+                    axis:{
+                        x:xAxis,
+                        y:yAxis
+                    },
+                    GridLines:yGridLines
+
+
+                    });//.call binds the first arguemet svg to this in function 
+     
+
+</script>
+   
+</body>
+
+</html>
